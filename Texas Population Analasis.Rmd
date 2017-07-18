@@ -1,0 +1,205 @@
+---
+title: "Texas Pop Analysis"
+author: "joshua Brikowski"
+date: "July 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## exas Population, 2016 (Projections) info
+this data was taken from https://www.dshs.texas.gov/chs/popdat/ST2016p.shtm. it had 8 cols labeld FIPS |	County |	County Name |	Total |	Anglo |	Black |	Hispanic | Other.
+this data represents the enthinic distinction for each county. i have gotten the XLS sheets for 2010-2017.
+
+i copyed and paisted the data directly from the website. annoyingly there is not xls or csv easaly findable on thsi website.
+
+for 2011 and 2012 i had issues converting to xls. just chaneg to plain text then it wall copy over.
+
+2010 contained actual census data thus is not dependent on any predictions.
+
+i remived the FIPS col since it was just alternateing odd numbers and essentually represented the same thing as the County.
+
+```{r cars}
+library(ggplot2)
+library(reshape2)
+library(readxl)
+library(gridExtra)
+tp2017 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2017", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2016 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2016", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+
+tp2015 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2015", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2014 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2014", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2013 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2013", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2012 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2012", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2011 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2011", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+tp2010 <- read_excel("~/R_files/data/texasPopCounty.xlsx", 
+    sheet = "2010", col_types = c("blank", 
+        "numeric", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric"))
+```
+##helperFunctins
+countypop <- gives 2010-2017 data on county
+plotAll <- plots all of county stats on graph
+
+
+
+
+
+
+```{r anderson, echo=FALSE}
+countypop <- function(countyName){
+  POP <- c(tp2010$Total[which(tp2010$`County Name` == countyName)],
+  tp2011$Total[which(tp2011$`County Name` == countyName)],
+  tp2012$Total[which(tp2012$`County Name` == countyName)],
+  tp2013$Total[which(tp2013$`County Name` == countyName)],
+  tp2014$Total[which(tp2014$`County Name` == countyName)],
+  tp2015$Total[which(tp2015$`County Name` == countyName)],
+  tp2016$Total[which(tp2016$`County Name` == countyName)],
+  tp2017$Total[which(tp2017$`County Name` == countyName)])
+  
+  Anglo <- c(tp2010$Anglo[which(tp2010$`County Name` == countyName)],
+  tp2011$Anglo[which(tp2011$`County Name` == countyName)],
+  tp2012$Anglo[which(tp2012$`County Name` == countyName)],
+  tp2013$Anglo[which(tp2013$`County Name` == countyName)],
+  tp2014$Anglo[which(tp2014$`County Name` == countyName)],
+  tp2015$Anglo[which(tp2015$`County Name` == countyName)],
+  tp2016$Anglo[which(tp2016$`County Name` == countyName)],
+  tp2017$Anglo[which(tp2017$`County Name` == countyName)])
+
+  Black <- c(tp2010$Black[which(tp2010$`County Name` == countyName)],
+  tp2011$Black[which(tp2011$`County Name` == countyName)],
+  tp2012$Black[which(tp2012$`County Name` == countyName)],
+  tp2013$Black[which(tp2013$`County Name` == countyName)],
+  tp2014$Black[which(tp2014$`County Name` == countyName)],
+  tp2015$Black[which(tp2015$`County Name` == countyName)],
+  tp2016$Black[which(tp2016$`County Name` == countyName)],
+  tp2017$Black[which(tp2017$`County Name` == countyName)])
+
+  Hispanic <- c(tp2010$Hispanic[which(tp2010$`County Name` == countyName)],
+  tp2011$Hispanic[which(tp2011$`County Name` == countyName)],
+  tp2012$Hispanic[which(tp2012$`County Name` == countyName)],
+  tp2013$Hispanic[which(tp2013$`County Name` == countyName)],
+  tp2014$Hispanic[which(tp2014$`County Name` == countyName)],
+  tp2015$Hispanic[which(tp2015$`County Name` == countyName)],
+  tp2016$Hispanic[which(tp2016$`County Name` == countyName)],
+  tp2017$Hispanic[which(tp2017$`County Name` == countyName)])
+
+  Other <- c(tp2010$Other[which(tp2010$`County Name` == countyName)],
+  tp2011$Other[which(tp2011$`County Name` == countyName)],
+  tp2012$Other[which(tp2012$`County Name` == countyName)],
+  tp2013$Other[which(tp2013$`County Name` == countyName)],
+  tp2014$Other[which(tp2014$`County Name` == countyName)],
+  tp2015$Other[which(tp2015$`County Name` == countyName)],
+  tp2016$Other[which(tp2016$`County Name` == countyName)],
+  tp2017$Other[which(tp2017$`County Name` == countyName)])
+
+
+  year = 2010:2017
+  
+  
+  return(data.frame(year,POP,Anglo,Black,Hispanic,Other)) 
+  
+}
+
+
+plotAll <- function(df,name){
+  d <- melt(df, id.vars="year")
+  # Everything on the same plot
+  ggplot(d, aes(year,value, col=variable)) + 
+  geom_point() + 
+  labs(title=name, x="Year", y="Population")
+}
+
+
+
+
+```
+
+
+## Anderson county growth over 10-17
+
+```{r Anderson}
+AndersonDF <- countypop('Anderson')
+
+summary(AndersonDF)
+plotAll(AndersonDF,'Anderson')
+
+# Separate plots
+#ggplot(d, aes(year,value)) + 
+#  geom_point() + 
+#  stat_smooth() +
+#  facet_wrap(~variable)
+```
+
+##county with largest change
+We can find that harris county has the largest growth of any county. this is probably atributed to it being one of the largest. its biggest demographic growth is hispanic.
+
+```{r bigestChange, fig.width = 10, fig.height=4}
+largestChangeCounty = 1
+countyNum = 1
+while(countyNum <nrow(tp2010)){
+  if((tp2017$Total[countyNum]-tp2010$Total[countyNum]) > (tp2017$Total[largestChangeCounty]-tp2010$Total[largestChangeCounty])){
+    largestChangeCounty = countyNum
+  }
+  countyNum = countyNum +1
+}
+
+largestChangeCounty
+
+
+
+largestName <- tp2010$`County Name`[which(tp2010$County == largestChangeCounty)]
+DF101 <- countypop(largestName)
+
+
+p1 <- plotAll(DF101,largestName)
+p2 <- plotAll(DF101[,-2],largestName)
+grid.arrange(p1, p2, ncol=2)
+
+
+```
+
+
+
+##predict the pop growth for Texas
+While the website had the full pop data i decided just to calculate it since i have a computer that can do several million calculations a second and this is about 3000 lines.
+```{r predictHarris}
+my.list <- list(tp2010, tp2011,tp2012,tp2013,tp2014,tp2015,tp2016,tp2017)
+year = 2010:2017
+population = c(sum(tp2010$Total),sum(tp2011$Total),sum(tp2012$Total),sum(tp2013$Total),sum(tp2014$Total),sum(tp2015$Total),sum(tp2016$Total),sum(tp2017$Total))
+texaspop <- data.frame(year,population)
+
+lm1 <- lm(population~year, data=texaspop)
+plotAll(texaspop,"Texas")
+
+```
+
+
+
+
+
+
+
