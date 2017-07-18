@@ -9,19 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## exas Population, 2016 (Projections) info
-this data was taken from https://www.dshs.texas.gov/chs/popdat/ST2016p.shtm. it had 8 cols labeld FIPS |	County |	County Name |	Total |	Anglo |	Black |	Hispanic | Other.
-this data represents the enthinic distinction for each county. i have gotten the XLS sheets for 2010-2017.
+## Texas Population, 2016 (Projections) info
+This data was taken from https://www.dshs.texas.gov/chs/popdat/ST2016p.shtm. it had 8 cols labeld FIPS |	County |	County Name |	Total |	Anglo |	Black |	Hispanic | Other. This data represents the enthinic distinction for each county. 
+NOTE:
+-2010 contained actual census data thus is not dependent on any predictions.
 
-i copyed and paisted the data directly from the website. annoyingly there is not xls or csv easaly findable on thsi website.
+-Removed the FIPS col since it was just alternateing odd numbers and essentually represented the same thing as the County.
 
-for 2011 and 2012 i had issues converting to xls. just chaneg to plain text then it wall copy over.
-
-2010 contained actual census data thus is not dependent on any predictions.
-
-i remived the FIPS col since it was just alternateing odd numbers and essentually represented the same thing as the County.
-
-```{r cars}
+```{r cars, echo=FALSE}
 library(ggplot2)
 library(reshape2)
 library(readxl)
@@ -60,9 +55,11 @@ tp2010 <- read_excel("~/R_files/data/texasPopCounty.xlsx",
         "numeric", "text", "numeric", "numeric", 
         "numeric", "numeric", "numeric"))
 ```
-##helperFunctins
-countypop <- gives 2010-2017 data on county
-plotAll <- plots all of county stats on graph
+##Helper Functions
+-countypop <- gives 2010-2017 data on county
+
+-plotAll <- plots all of county stats on graph
+-ggplotRegression <- plots points with regression line
 
 
 
@@ -130,10 +127,22 @@ plotAll <- function(df,name){
   # Everything on the same plot
   ggplot(d, aes(year,value, col=variable)) + 
   geom_point() + 
+  stat_smooth() +
   labs(title=name, x="Year", y="Population")
 }
 
+ggplotRegression <- function (fit) {
 
+require(ggplot2)
+
+ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     "Intercept =",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+}
 
 
 ```
@@ -141,7 +150,7 @@ plotAll <- function(df,name){
 
 ## Anderson county growth over 10-17
 
-```{r Anderson}
+```{r Anderson, echo=FALSE}
 AndersonDF <- countypop('Anderson')
 
 summary(AndersonDF)
@@ -154,10 +163,10 @@ plotAll(AndersonDF,'Anderson')
 #  facet_wrap(~variable)
 ```
 
-##county with largest change
-We can find that harris county has the largest growth of any county. this is probably atributed to it being one of the largest. its biggest demographic growth is hispanic.
+##County with largest change
+After querrying the data we find harris county to have the largest growth of any county. This is probably atributed to it being one of the largest. its biggest demographic growth is hispanic.
 
-```{r bigestChange, fig.width = 10, fig.height=4}
+```{r bigestChange, fig.width = 10, fig.height=4, echo=FALSE}
 largestChangeCounty = 1
 countyNum = 1
 while(countyNum <nrow(tp2010)){
@@ -167,7 +176,6 @@ while(countyNum <nrow(tp2010)){
   countyNum = countyNum +1
 }
 
-largestChangeCounty
 
 
 
@@ -176,8 +184,11 @@ DF101 <- countypop(largestName)
 
 
 p1 <- plotAll(DF101,largestName)
-p2 <- plotAll(DF101[,-2],largestName)
-grid.arrange(p1, p2, ncol=2)
+
+p2 <- plotAll(DF101[,-2], 'Harris Demographics')
+p3 <- plotAll(DF101[,c(1,5)], 'Harris Hispanic')
+p4 <- plotAll(DF101[,c(1,3)], 'Harris Anglo')
+grid.arrange(p1, p2,p3,p4, ncol=2)
 
 
 ```
@@ -185,15 +196,23 @@ grid.arrange(p1, p2, ncol=2)
 
 
 ##predict the pop growth for Texas
-While the website had the full pop data i decided just to calculate it since i have a computer that can do several million calculations a second and this is about 3000 lines.
-```{r predictHarris}
+
+Here we can see a regression line fitted to the population data points. i also predict the population in 2025.
+
+```{r predictHarris, echo=FALSE, fig.width=15,fig.height=4}
 my.list <- list(tp2010, tp2011,tp2012,tp2013,tp2014,tp2015,tp2016,tp2017)
 year = 2010:2017
 population = c(sum(tp2010$Total),sum(tp2011$Total),sum(tp2012$Total),sum(tp2013$Total),sum(tp2014$Total),sum(tp2015$Total),sum(tp2016$Total),sum(tp2017$Total))
 texaspop <- data.frame(year,population)
 
 lm1 <- lm(population~year, data=texaspop)
-plotAll(texaspop,"Texas")
+p1 = plotAll(texaspop,"Texas")
+summary(lm1)
+
+p2 = ggplotRegression(lm1)
+
+
+grid.arrange(p1, p2, ncol=2)
 
 ```
 
